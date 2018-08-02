@@ -1,5 +1,6 @@
 #include "std_lib_facilities.h"
 #include "Token5.h"
+#include "vars.h"
 //#include "parser.h"
 
 const char prompt = '>';
@@ -7,14 +8,50 @@ const string result = "= ";
 
 double expression(Token_stream& ts);
 double term(Token_stream& ts);
+double expon(Token_stream& ts);
 double primary(Token_stream& ts);
+
+
+double statement(Token_stream& ts)
+{
+    /* grammar recognized:
+     Statement:
+     Var "=" Expression
+     Var ";"
+     Expression
+     */
+    Token t = ts.get();
+    if(t.kind == name) {
+        Token var = t;
+        //        cout << "Got a var with name " << var.name << endl;
+        t = ts.get();
+        if(t.kind == '=') {  // an assignment
+            double d = expression(ts);
+            set_value(var.name, d);
+            return d;
+        }
+        else if(t.kind == print) {
+            ts.putback(t);
+            return get_value(var.name);
+        }
+        ts.putback(t);
+        ts.putback(var);
+        return expression(ts);
+    }
+    ts.putback(t);
+    return expression(ts);
+}
+
 
 double expression(Token_stream& ts){
     double left = term(ts);
     Token t = ts.get();
+//    cout << "in expression " << endl;
+//    cout << "we are in expression with token of " << t.kind << endl;
     while(true){
         switch(t.kind){
             case '+':
+//                cout << "in case + " << endl;
                 left += term(ts);
                 t = ts.get();
                 break;
@@ -31,18 +68,25 @@ double expression(Token_stream& ts){
 
 double term(Token_stream& ts)
 {
-    double left = primary(ts);
+    /* grammar recognized:
+     Term:
+     Primary
+     Term "*" Primary
+     Term "/" Primary
+     Term "%" Primary
+     */
+    double left = expon(ts);
     Token t = ts.get();        // get the next token from token stream
     
     while(true) {
         switch (t.kind) {
             case '*':
-                left *= primary(ts);
+                left *= expon(ts);
                 t = ts.get();
                 break;
             case '/':
             {
-                double d = primary(ts);
+                double d = expon(ts);
                 if (d == 0) error("divide by zero");
                 left /= d;
                 t = ts.get();
@@ -50,7 +94,7 @@ double term(Token_stream& ts)
             }
             case '%':
             {
-                double d = primary(ts);
+                double d = expon(ts);
                 if (d == 0) error("divide by zero");
                 left = fmod(left, d);
                 t = ts.get();
@@ -62,6 +106,25 @@ double term(Token_stream& ts)
         }
     }
     
+}
+
+double expon(Token_stream& ts)
+{
+    /* grammar recognized:
+     Exp:
+     Primary
+     Primary "^" Primary
+     */
+    double left = primary(ts);
+    Token t = ts.get();
+    if(t.kind == power) {
+        double d = primary(ts);
+        return pow(left, d);
+    }
+    else {
+        ts.putback(t);     // put t back into the token stream
+        return left;
+    }
 }
 
 double primary(Token_stream& ts)
@@ -81,6 +144,9 @@ double primary(Token_stream& ts)
             return -primary(ts);
         case '+':
             return primary(ts);
+        case name:
+//            cout << "in this case!" << "with value " << get_value(t.name);
+            return get_value(t.name);
         default:
             error("primary expected");
     }
@@ -104,7 +170,7 @@ void calculate(Token_stream& ts)
             while(t.kind == print) t = ts.get();
             if(t.kind == quit) return;
             ts.putback(t);
-            cout << result << expression(ts) << '\n';
+            cout << setprecision(8) << result << statement(ts) << '\n';
         }
         catch(exception& e) {
             cerr << e.what() << '\n';
