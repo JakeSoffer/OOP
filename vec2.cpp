@@ -23,17 +23,15 @@ public:
     
     ~vect() { delete[] elem; }
     
-    double get(int i) { return elem[i]; }
-    void set(int i, double d) { elem[i] = d; }
+    double& operator[](int n) {
+        return elem[n];
+    }
     
-    /*vect& operator=(const vect& a) {
-     double* p = new double[a.sz];
-     copy(a.elem, a.elem + a.sz, p);
-     delete[] elem;
-     elem = p;
-     sz = a.sz;
-     return *this;
-     }*/
+    //no need for get and set with bracket overloading
+//    double get(int i) { return elem[i]; }
+//    void set(int i, double d) { elem[i] = d; }
+    
+   
 private:
     int sz;
     double* elem;
@@ -57,11 +55,11 @@ private:
 
 void f(int n) {
     vect v(3);
-    v.set(2, 2.2);
+    v[2] = 3.8;
     vect v2 = v;
-    v.set(1, 9.9);
-    v2.set(0, 8.8);
-    cout << v.get(0) << ' ' << v2.get(1);
+    v[1] = 7.7;
+    v2[0] = 4.4;
+    cout << v[0] << ' ' << v2[1];
 }
 
 int main() {
