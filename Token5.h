@@ -6,6 +6,8 @@ const char quit = 'q';
 const char print = ';';
 const char power = '^';
 const char mod = '%';
+const char quad = '@';
+
 
 class Token {
 public:

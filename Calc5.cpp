@@ -100,6 +100,15 @@ double term(Token_stream& ts)
                 t = ts.get();
                 break;
             }
+            case '2':
+            {
+                break;
+            }
+            case '@':
+            {
+                t = ts.get();
+                break;
+            }
             default:
                 ts.putback(t);     // put t back into the token stream
                 return left;
@@ -147,6 +156,9 @@ double primary(Token_stream& ts)
         case name:
 //            cout << "in this case!" << "with value " << get_value(t.name);
             return get_value(t.name);
+        case '@':
+            t.value = 0;
+            return t.value;
         default:
             error("primary expected");
     }
